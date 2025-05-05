@@ -1,0 +1,94 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getMovieDetails, type OMDbMovieResponse } from '../../lib/omdb';
+import { getScreeningsForMovie, getCinemaDetails, type Screening, type Cinema } from '../../lib/cinemaData';
+
+// List of IMDb IDs moved inside getStaticPaths
+
+// Astro's function to generate static paths for dynamic routes
+export async function getStaticPaths() {
+  // Moved the definition inside the function
+  const featuredMovieIds = [
+    "tt3896198", // Guardians of the Galaxy Vol. 2
+    "tt0848228", // The Avengers
+    "tt4154796", // Avengers: Endgame
+    "tt0114709", // Toy Story
+  ];
+
+  const paths = await Promise.all(
+    featuredMovieIds.map(async (id) => {
+      const movie = await getMovieDetails(id);
+      if (movie) {
+        // Fetch screening info for this movie
+        const screenings = getScreeningsForMovie(movie.imdbID);
+        const screeningsWithCinemaDetails = screenings.map(screening => ({
+            ...screening,
+            cinema: getCinemaDetails(screening.cinemaId)
+        })).filter(s => s.cinema); // Add cinema details and filter out if cinema not found
+
+        return {
+          params: { id: movie.imdbID },
+          props: { movie, screenings: screeningsWithCinemaDetails }, // Pass screenings as props
+        };
+      } else {
+        return null; // Skip if movie fetch failed
+      }
+    })
+  );
+
+  return paths.filter(path => path !== null);
+}
+
+// Get the movie data and screening data passed as props
+const { movie, screenings: movieScreenings } = Astro.props as {
+  movie: OMDbMovieResponse;
+  screenings: (Screening & { cinema: Cinema })[]; // Type for screenings with cinema details
+};
+
+// Removed placeholder showtimes
+---
+
+<BaseLayout title={`Cine Demo - ${movie.Title}`}>
+  <div class="max-w-4xl mx-auto">
+    <a href="/" class="text-primary hover:underline mb-4 inline-block">&larr; Volver a Películas</a>
+
+    <div class="bg-card rounded-lg shadow-lg overflow-hidden md:flex mb-8">
+      <img src={movie.Poster} alt={`Poster for ${movie.Title}`} class="md:w-1/3 w-full h-auto object-cover"/>
+      <div class="p-6 md:w-2/3 flex flex-col">
+        <h2 class="text-3xl font-bold mb-1">{movie.Title}</h2>
+        <p class="text-sm text-muted-foreground mb-3">({movie.Year}) - {movie.Rated} - {movie.Runtime}</p>
+        <p class="text-foreground/90 mb-6 flex-grow">{movie.Plot}</p>
+        <!-- "Buy Tickets" button could be moved per screening or removed for now -->
+      </div>
+    </div>
+
+    <div class="bg-card rounded-lg shadow-lg p-6">
+        <h3 class="text-2xl font-semibold mb-4">En cartelera en</h3>
+        {movieScreenings.length > 0 ? (
+            <ul class="space-y-4">
+                {movieScreenings.map(screening => (
+                    <li class="border-b pb-4 last:border-b-0">
+                        <h4 class="text-xl font-medium">{screening.cinema.name}</h4>
+                        <p class="text-sm text-muted-foreground mb-2">{screening.cinema.location}</p>
+                        <div class="flex flex-wrap gap-2">
+                            {screening.showtimes.map((time: string) => (
+                                <button class="bg-secondary text-secondary-foreground hover:bg-secondary/80 font-medium py-1 px-3 rounded text-sm cursor-pointer transition duration-300">
+                                    {time}
+                                </button>
+                            ))}
+                        </div>
+                         {/* Add "Buy Tickets for this cinema/time" button here? */}
+                    </li>
+                ))}
+            </ul>
+        ) : (
+            <p class="text-muted-foreground">Actualmente no está programada en ningún cine.</p>
+        )}
+    </div>
+
+  </div>
+</BaseLayout>
+
+<style>
+  /* Add specific styles if needed */
+</style> 

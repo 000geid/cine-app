@@ -1,0 +1,31 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { cinemas, type Cinema } from '../../lib/cinemaData';
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "../../components/ui/card"; // Trying path relative to src root
+---
+
+<BaseLayout title="Cine Demo - Nuestros Cines">
+  <div class="max-w-4xl mx-auto">
+    <h2 class="text-3xl font-bold text-center mb-8">Nuestros Cines</h2> {/* Translated heading */} 
+
+    <div class="space-y-4"> {/* Replaced ul with div */} 
+      {cinemas.map((cinema: Cinema) => (
+        <a href={`/cinemas/${cinema.id}`} class="block group"> {/* Wrap card in link */} 
+          <Card className="hover:border-primary transition-colors duration-200"> {/* Use className for React components */} 
+            <CardHeader>
+              <CardTitle className="group-hover:text-primary transition-colors duration-200">{cinema.name}</CardTitle>
+              <CardDescription>{cinema.location}</CardDescription>
+            </CardHeader>
+            {/* CardContent could be added if more info is needed */}
+          </Card>
+        </a>
+      ))}
+    </div>
+
+  </div>
+</BaseLayout> 

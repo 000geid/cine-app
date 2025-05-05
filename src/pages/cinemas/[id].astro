@@ -1,0 +1,108 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import {
+    cinemas,
+    getCinemaDetails,
+    getScreeningsAtCinema,
+    type Cinema,
+    type Screening
+} from '../../lib/cinemaData';
+import { getMovieDetails, type OMDbMovieResponse } from '../../lib/omdb';
+import {
+    Card,
+    CardContent,
+    CardHeader,
+    CardTitle,
+    CardDescription
+} from "../../components/ui/card";
+import { Badge } from "../../components/ui/badge";
+
+// Interface combining OMDb data with specific showtimes for this cinema
+interface MovieWithShowtimes extends OMDbMovieResponse {
+    showtimesHere: string[];
+}
+
+export async function getStaticPaths() {
+    const paths = await Promise.all(
+        cinemas.map(async (cinema) => {
+            const screenings = getScreeningsAtCinema(cinema.id);
+            const movieIds = [...new Set(screenings.map(s => s.movieId))]; // Unique movie IDs
+
+            // Fetch details for movies shown at this cinema
+            const movieDetailsPromises = movieIds.map(id => getMovieDetails(id));
+            const movieDetailsResults = await Promise.all(movieDetailsPromises);
+            const validMovies = movieDetailsResults.filter((m): m is OMDbMovieResponse => m !== null);
+
+            // Combine movie details with showtimes for this specific cinema
+            const moviesWithShowtimes: MovieWithShowtimes[] = validMovies.map(movie => {
+                const relevantScreening = screenings.find(s => s.movieId === movie.imdbID);
+                return {
+                    ...movie,
+                    showtimesHere: relevantScreening ? relevantScreening.showtimes : []
+                };
+            }).filter(m => m.showtimesHere.length > 0); // Only include movies actually showing
+
+            // Return null if no movies are actually showing at this cinema for the fetched IDs
+            if (moviesWithShowtimes.length === 0) {
+                return null;
+            }
+
+            return {
+                params: { id: cinema.id.toString() },
+                props: {
+                    cinema,
+                    movies: moviesWithShowtimes
+                },
+            };
+        })
+    );
+    // Filter out null paths (fetch errors or cinemas with no scheduled movies)
+    return paths.filter(path => path !== null);
+}
+
+const { cinema, movies } = Astro.props as {
+    cinema: Cinema;
+    movies: MovieWithShowtimes[];
+};
+---
+
+<BaseLayout title={`Cine Demo - ${cinema.name}`}>
+    <div class="max-w-6xl mx-auto">
+        <a href="/cinemas" class="text-primary hover:underline mb-4 inline-block">&larr; Volver a Cines</a>
+        <h2 class="text-3xl font-bold mb-2">{cinema.name}</h2>
+        <p class="text-lg text-muted-foreground mb-8">{cinema.location}</p>
+
+        <h3 class="text-2xl font-semibold mb-4">En Cartelera</h3>
+
+        {movies.length > 0 ? (
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                {movies.map((movie: MovieWithShowtimes) => (
+                    <Card className="overflow-hidden flex flex-col">
+                        <CardHeader className="p-0">
+                            <img src={movie.Poster} alt={`Poster for ${movie.Title}`} class="w-full h-72 object-cover"/>
+                        </CardHeader>
+                        <CardContent className="p-4 flex flex-col flex-grow">
+                            <h4 class="text-lg font-semibold mb-1">{movie.Title} ({movie.Year})</h4>
+                            <p class="text-xs text-muted-foreground mb-2">{movie.Rated} - {movie.Runtime}</p>
+                            <div class="mb-3">
+                                <p class="text-sm font-medium mb-1">Horarios:</p>
+                                <div class="flex flex-wrap gap-1">
+                                    {movie.showtimesHere.map((time: string) => (
+                                        <Badge variant="secondary">{time}</Badge>
+                                    ))}
+                                </div>
+                            </div>
+                            <div class="mt-auto pt-3 border-t">
+                                <a href={`/movie/${movie.imdbID}`} class="text-sm font-medium text-primary hover:underline">
+                                    Ver Detalles &rarr;
+                                </a>
+                            </div>
+                        </CardContent>
+                    </Card>
+                ))}
+            </div>
+        ) : (
+            <p class="text-muted-foreground">No hay películas programadas actualmente en este cine.</p>
+        )}
+    </div>
+</BaseLayout>

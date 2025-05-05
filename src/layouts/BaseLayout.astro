@@ -1,0 +1,41 @@
+---
+export interface Props {
+	title: string;
+}
+
+const { title } = Astro.props;
+import '../styles/global.css';
+---
+
+<!doctype html>
+<html lang="es-AR">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="description" content="Demo de sitio de cine" />
+		<meta name="viewport" content="width=device-width" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<meta name="generator" content={Astro.generator} />
+		<title>{title}</title>
+		<!-- <link rel="stylesheet" href="/src/styles/global.css"> Link tag still not needed -->
+	</head>
+	<body class="bg-background text-foreground flex flex-col min-h-screen">
+		<header class="bg-card shadow-md py-4 text-center border-b">
+			<div class="container mx-auto flex items-center justify-between px-4">
+				<h1 class="text-2xl font-bold text-primary">
+					<a href="/" class="hover:opacity-80 transition-opacity">Cine Demo</a>
+				</h1>
+				<nav>
+					<a href="/cinemas" class="text-foreground/80 hover:text-primary transition-colors">Nuestros Cines</a>
+				</nav>
+			</div>
+		</header>
+		<main class="flex-grow container mx-auto px-4 py-8">
+			<slot />
+		</main>
+		<footer class="bg-muted py-4 text-center text-sm text-muted-foreground mt-8 border-t">
+			<p>&copy; {new Date().getFullYear()} Cine Demo. Todos los derechos reservados.</p>
+		</footer>
+	</body>
+</html>
+
+<!-- Removed <style is:global> block --> 

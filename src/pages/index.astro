@@ -1,25 +1,48 @@
 ---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getMultipleMovieDetails, type OMDbMovieResponse } from '../lib/omdb';
+import { cinemas, type Cinema } from '../lib/cinemaData'; // Import cinema data
 import '../styles/global.css';
-// Component Imports
-import Button from '../components/Button.astro';
+import { NavigationSelectors } from '../components/NavigationSelectors'; // Import the new component
+
+// Component Imports - Removed unused Button and global.css import
 
 // Full Astro Component Syntax:
 // https://docs.astro.build/basics/astro-components/
+
+// Fetch movie data - Using the same IDs as the detail page for consistency
+const featuredMovieIds = [
+	"tt3896198", // Guardians of the Galaxy Vol. 2
+	"tt0848228", // The Avengers
+	"tt4154796", // Avengers: Endgame
+	"tt0114709", // Toy Story
+];
+const movies = await getMultipleMovieDetails(featuredMovieIds);
+
+// Cinema data is imported directly
+const allCinemas = cinemas;
 ---
 
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro + TailwindCSS</title>
-	</head>
+<BaseLayout title="Cine Demo - Inicio">
+	{/* Add the NavigationSelectors component */}
+	<NavigationSelectors movies={movies} cinemas={allCinemas} client:load />
 
-	<body>
-		<div class="grid place-items-center h-screen content-center">
-			<Button>Tailwind Button in Astro!</Button>
-			<a href="/markdown-page" class="p-4 underline">Markdown is also supported...</a>
-		</div>
-	</body>
-</html>
+	<h2 class="text-3xl font-bold text-center mb-8">Películas Destacadas</h2>
+
+	<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+		{movies.map((movie: OMDbMovieResponse) => (
+			<div class="bg-card rounded-lg shadow-lg overflow-hidden transform transition duration-300 hover:scale-105 flex flex-col">
+				<img src={movie.Poster} alt={`Poster for ${movie.Title}`} class="w-full h-72 object-cover"/>
+				<div class="p-4 flex flex-col h-full flex-grow">
+					<h3 class="text-xl font-semibold mb-2">{movie.Title} ({movie.Year})</h3>
+					<p class="text-sm text-muted-foreground mb-4 flex-grow">{movie.Plot.substring(0, 100) + (movie.Plot.length > 100 ? '...' : '')}</p>
+					<div class="mt-auto">
+						<a href={`/movie/${movie.imdbID}`} class="inline-block bg-primary text-primary-foreground hover:bg-primary/90 text-sm font-medium py-2 px-4 rounded transition duration-300 w-full text-center">
+							Ver Detalles y Comprar
+						</a>
+					</div>
+				</div>
+			</div>
+		))}
+	</div>
+</BaseLayout>
