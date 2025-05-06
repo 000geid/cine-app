@@ -2,6 +2,7 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { getMovieDetails, type OMDbMovieResponse } from '../../lib/omdb';
 import { getScreeningsForMovie, getCinemaDetails, type Screening, type Cinema } from '../../lib/cinemaData';
+import { ShowtimeSelector } from '../../components/ShowtimeSelector';
 
 // List of IMDb IDs moved inside getStaticPaths
 
@@ -45,6 +46,8 @@ const { movie, screenings: movieScreenings } = Astro.props as {
   screenings: (Screening & { cinema: Cinema })[]; // Type for screenings with cinema details
 };
 
+const movieId = movie.imdbID; // Get movieId from the fetched movie data
+
 // Removed placeholder showtimes
 ---
 
@@ -62,29 +65,7 @@ const { movie, screenings: movieScreenings } = Astro.props as {
       </div>
     </div>
 
-    <div class="bg-card rounded-lg shadow-lg p-6">
-        <h3 class="text-2xl font-semibold mb-4">En cartelera en</h3>
-        {movieScreenings.length > 0 ? (
-            <ul class="space-y-4">
-                {movieScreenings.map(screening => (
-                    <li class="border-b pb-4 last:border-b-0">
-                        <h4 class="text-xl font-medium">{screening.cinema.name}</h4>
-                        <p class="text-sm text-muted-foreground mb-2">{screening.cinema.location}</p>
-                        <div class="flex flex-wrap gap-2">
-                            {screening.showtimes.map((time: string) => (
-                                <button class="bg-secondary text-secondary-foreground hover:bg-secondary/80 font-medium py-1 px-3 rounded text-sm cursor-pointer transition duration-300">
-                                    {time}
-                                </button>
-                            ))}
-                        </div>
-                         {/* Add "Buy Tickets for this cinema/time" button here? */}
-                    </li>
-                ))}
-            </ul>
-        ) : (
-            <p class="text-muted-foreground">Actualmente no está programada en ningún cine.</p>
-        )}
-    </div>
+    <ShowtimeSelector screenings={movieScreenings} movieId={movieId} client:load />
 
   </div>
 </BaseLayout>

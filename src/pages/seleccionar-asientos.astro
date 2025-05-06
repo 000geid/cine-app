@@ -1,0 +1,9 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { SeatSelectionPageWrapper } from '../components/SeatSelectionPageWrapper';
+---
+<BaseLayout title="Seleccionar Asientos">
+    <div class="max-w-3xl mx-auto">
+        <SeatSelectionPageWrapper client:only="react" />
+    </div>
+</BaseLayout> 
