@@ -1,0 +1,9 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { PaymentPageWrapper } from '../components/PaymentPageWrapper';
+---
+<BaseLayout title="Pago">
+    <div class="max-w-2xl mx-auto">
+        <PaymentPageWrapper client:only="react" />
+    </div>
+</BaseLayout> 

@@ -13,6 +13,7 @@ export function SeatSelectionPageWrapper() {
     const [cinema, setCinema] = React.useState<Cinema | null>(null);
     const [time, setTime] = React.useState<string | null>(null);
     const [cinemaId, setCinemaId] = React.useState<number | null>(null);
+    const [movieId, setMovieId] = React.useState<string | null>(null);
 
     React.useEffect(() => {
         // This code runs only in the browser
@@ -36,6 +37,7 @@ export function SeatSelectionPageWrapper() {
             return;
         }
 
+        setMovieId(movieIdParam);
         setCinemaId(parsedCinemaId);
         setTime(timeParam);
 
@@ -88,7 +90,7 @@ export function SeatSelectionPageWrapper() {
         );
     }
 
-    if (movie && cinema && cinemaId && time) {
+    if (movie && cinema && cinemaId && time && movieId) {
          return (
             <div className="bg-card rounded-lg shadow-lg overflow-hidden">
                 <div className="p-6 border-b">
@@ -96,7 +98,7 @@ export function SeatSelectionPageWrapper() {
                     <p className="text-lg text-muted-foreground mb-1">{cinema.name} - {cinema.location}</p>
                     <p className="text-lg font-semibold text-primary">Horario: {time}</p>
                 </div>
-                <SeatSelection cinemaId={cinemaId} time={time} />
+                <SeatSelection cinemaId={cinemaId} time={time} movieId={movieId} />
             </div>
         );
     }

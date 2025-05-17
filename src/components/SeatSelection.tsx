@@ -7,6 +7,7 @@ import { cn } from "../lib/utils";
 interface SeatSelectionProps {
     cinemaId: number;
     time: string;
+    movieId: string;
     // In a real app, you might fetch the actual seat map/occupancy based on cinemaId/time
 }
 
@@ -40,7 +41,7 @@ const seatRows = ["A", "B", "C", "D", "E"];
 const seatsPerRow = 8;
 
 // --- Component ---
-export function SeatSelection({ cinemaId, time }: SeatSelectionProps) {
+export function SeatSelection({ cinemaId, time, movieId }: SeatSelectionProps) {
     // Initialize seats only once
     const initialSeats = React.useMemo(() => generateMockSeats(seatRows, seatsPerRow), []);
     const [seats, setSeats] = React.useState<Seat[]>(initialSeats);
@@ -70,9 +71,16 @@ export function SeatSelection({ cinemaId, time }: SeatSelectionProps) {
     };
 
     const handleConfirm = () => {
-        // Simulate confirmation
-        alert(`Confirmando ${selectedSeatIds.size} asientos para la función de las ${time}.\nAsientos: ${Array.from(selectedSeatIds).join(', ')}`);
-        // Here you would typically navigate to a payment/confirmation page
+        const seatsQueryParam = Array.from(selectedSeatIds).join(',');
+        const params = new URLSearchParams({
+            movieId: movieId,
+            cinemaId: cinemaId.toString(),
+            time: time,
+            seats: seatsQueryParam
+        });
+        const url = `/pago?${params.toString()}`;
+        console.log(`Navigating to payment page: ${url}`);
+        window.location.href = url;
     };
 
     return (
